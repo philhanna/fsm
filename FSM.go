@@ -6,5 +6,4 @@ package fsm
 
 // FSM is a finite-state machine
 type FSM struct {
-
 }
