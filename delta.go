@@ -10,3 +10,14 @@ type Delta struct {
 	state State
 	event Event
 }
+
+// ---------------------------------------------------------------------
+// Constructor
+// ---------------------------------------------------------------------
+
+func NewDelta(state State, event Event) *Delta {
+	d := new(Delta)
+	d.state = state
+	d.event = event
+	return d
+}
