@@ -6,29 +6,32 @@ import "errors"
 // Type definitions
 // ---------------------------------------------------------------------
 
+type Event int
+type State int
+type Transition func(event Event) (State, error)
+
 // FSM is a finite-state machine
-type FSM[T any] struct {
+type FSM struct {
 
 	// The set of states this FSM can have
 	States []State
 
-	// The set of events that this FSM can respond to
-	Events []Event[T]
-
-	// The function that maps a tuple of state and event to
-	// the transition that happens.
-	TransitionMap map[State]Transition[T]
-
 	// The initial state
 	InitialState State
 
-	// The set of final states
-	FinalStates []State
+	// The function that maps a tuple of state and event to
+	// the transition that happens.
+	TransitionMap map[State]Transition
 }
+
 
 // ---------------------------------------------------------------------
 // Constants and variables
 // ---------------------------------------------------------------------
+const (
+	UNKNOWN     State = -1
+	ERROR_STATE State = -2
+)
 
 var (
 	ERR_NO_EVENTS        = errors.New("No events defined")
@@ -41,12 +44,10 @@ var (
 // Constructors
 // ---------------------------------------------------------------------
 
-// NewFSM[T] creates a new finite-state machine of type T that
-func NewFSM[T any]() *FSM[T] {
-	fsm := new(FSM[T])
+// NewFSM creates a new finite-state machine
+func NewFSM() *FSM {
+	fsm := new(FSM)
 	fsm.States = make([]State, 0)
-	fsm.Events = make([]Event[T], 0)
-	fsm.FinalStates = make([]State, 0)
 	fsm.InitialState = UNKNOWN
 	return fsm
 }
@@ -56,59 +57,36 @@ func NewFSM[T any]() *FSM[T] {
 // ---------------------------------------------------------------------
 
 // Run runs the finite state machine using the channel of events sent to
-// it
-func (fsm *FSM[T]) Run(ch <-chan Event[T]) error {
+// it. It returns the final state and any error.
+func (fsm *FSM) Run(ch <-chan Event) (State, error) {
 
 	// Check for valid structure
-	if len(fsm.Events) == 0 {
-		return ERR_NO_EVENTS
-	}
 	if fsm.InitialState == UNKNOWN {
-		return ERR_NO_INITIAL_STATE
+		return ERROR_STATE, ERR_NO_INITIAL_STATE
 	}
 	if len(fsm.States) == 0 {
-		return ERR_NO_STATES
+		return ERROR_STATE, ERR_NO_STATES
 	}
 	if len(fsm.TransitionMap) == 0 {
-		return ERR_NO_TRANSITIONS
+		return ERROR_STATE, ERR_NO_TRANSITIONS
 	}
 
 	// Start running
 	state := fsm.InitialState
-	go func() {
+	go func() (State, error) {
 		for {
-			event := <-ch
+			event, OK := <-ch
+			if !OK {
+				return state, nil
+			}
 			transition := fsm.TransitionMap[state]
-			state = transition(state, event)
-			if state == DONE {
-				break
+			state, err := transition(event)
+			if err != nil {
+				return state, err
 			}
 		}
 	}()
 
-	return nil
-}
-
-// ---------------------------------------------------------------------
-// Methods
-// ---------------------------------------------------------------------
-
-func (fsm *FSM[T]) AddEvent(event Event[T]) {
-	fsm.Events = append(fsm.Events, event)
-}
-
-func (fsm *FSM[T]) AddState(state State) {
-	fsm.States = append(fsm.States, state)
-}
-
-func (fsm *FSM[T]) AddFinalState(state State) {
-	fsm.FinalStates = append(fsm.FinalStates, state)
-}
-
-func (fsm *FSM[T]) SetInitialState(state State) {
-	fsm.InitialState = state
-}
-
-func (fsm *FSM[T]) SetTransition(state State, transition Transition[T]) {
-	fsm.TransitionMap[state] = transition
+	// Return the final state
+	return state, nil
 }
