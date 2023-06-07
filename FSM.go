@@ -34,7 +34,7 @@ func NewFSM[T any]() *FSM[T] {
 	fsm.States = make([]State, 0)
 	fsm.Events = make([]Event[T], 0)
 	fsm.InitialState = INIT
-	
+
 	fsm.States = append(fsm.States, fsm.InitialState)
 	fsm.FinalStates = make([]State, 0)
 	return fsm
@@ -44,3 +44,9 @@ func NewFSM[T any]() *FSM[T] {
 // Methods
 // ---------------------------------------------------------------------
 
+// Run runs the finite state machine using the channel of events sent to
+// it
+func (fsm *FSM[T]) Run(inputChan <- chan Event[T]) error {
+	// TODO implement me
+	return nil
+}
