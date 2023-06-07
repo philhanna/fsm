@@ -5,5 +5,6 @@ package fsm
 // ---------------------------------------------------------------------
 
 // Event is one of a finite non-empty set of element of the Alphabet.
-type Event struct {	
+type Event[T any] struct {
+	Value T
 }

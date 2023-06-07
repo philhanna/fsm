@@ -5,5 +5,8 @@ package fsm
 // ---------------------------------------------------------------------
 
 // State is one of the possible states in the FSM.
-type State struct {
-}
+type State int
+const (
+	UNKNOWN State = iota
+	INIT
+)
