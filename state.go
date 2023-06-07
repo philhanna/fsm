@@ -8,5 +8,5 @@ package fsm
 type State int
 const (
 	UNKNOWN State = iota
-	INIT
+	DONE
 )
