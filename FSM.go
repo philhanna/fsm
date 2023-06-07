@@ -9,12 +9,12 @@ import (
 // Type definitions
 // ---------------------------------------------------------------------
 
-type Event int
+type Event[T any] any
 type State int
-type Transition func(event Event) (State, error)
+type Transition[T any] func(event Event[T]) (State, error)
 
 // FSM is a finite-state machine
-type FSM struct {
+type FSM[T any] struct {
 
 	// The set of states this FSM can have
 	States []State
@@ -27,18 +27,19 @@ type FSM struct {
 
 	// The function that maps a tuple of state and event to
 	// the transition that happens.
-	TransitionMap map[State]Transition
+	TransitionMap map[State]Transition[T]
 
 	// Set on the Trace flag to trace each transition
 	Trace bool
 }
 
-
 // ---------------------------------------------------------------------
 // Constants and variables
 // ---------------------------------------------------------------------
 const (
-	UNKNOWN     State = -1
+	UNKNOWN State = -1
+	ON            = true
+	OFF           = false
 )
 
 var (
@@ -53,8 +54,8 @@ var (
 // ---------------------------------------------------------------------
 
 // NewFSM creates a new finite-state machine
-func NewFSM() *FSM {
-	fsm := new(FSM)
+func NewFSM[T any]() *FSM[T] {
+	fsm := new(FSM[T])
 	fsm.States = make([]State, 0)
 	fsm.InitialState = UNKNOWN
 	return fsm
@@ -65,7 +66,7 @@ func NewFSM() *FSM {
 // ---------------------------------------------------------------------
 
 // Run runs the finite state machine, sending the state back by a channel
-func (fsm *FSM) Run(inch chan Event) chan State{
+func (fsm *FSM[T]) Run(inch chan Event[T]) chan State {
 
 	// Check for valid structure
 	if fsm.InitialState == UNKNOWN {
@@ -87,7 +88,7 @@ func (fsm *FSM) Run(inch chan Event) chan State{
 		defer close(ouch)
 		for {
 			inState = fsm.CurrentState
-			event := <- inch
+			event := <-inch
 			transition := fsm.TransitionMap[fsm.CurrentState]
 			fsm.CurrentState, err = transition(event)
 			outState = fsm.CurrentState
@@ -106,6 +107,6 @@ func (fsm *FSM) Run(inch chan Event) chan State{
 }
 
 // SetTrace turns the trace flag on or off.
-func (fsm *FSM) SetTrace(value bool) {
+func (fsm *FSM[T]) SetTrace(value bool) {
 	fsm.Trace = value
 }

@@ -16,13 +16,14 @@ const (
 )
 
 func TestFSM_DivisibleBy3(t *testing.T) {
-	fsm := NewFSM()
+	fsm := NewFSM[int]()
 	fsm.SetTrace(true)
 	fsm.States = []State{
 		q0, q1, q2,
 	}
 
-	F0 := func(event Event) (State, error) {
+	F0 := func(event Event[int]) (State, error) {
+
 		switch event {
 		case '1', '4', '7':
 			return q1, nil
@@ -33,7 +34,7 @@ func TestFSM_DivisibleBy3(t *testing.T) {
 		}
 	}
 
-	F1 := func(event Event) (State, error) {
+	F1 := func(event Event[int]) (State, error) {
 		switch event {
 		case '1', '4', '7':
 			return q2, nil
@@ -44,7 +45,7 @@ func TestFSM_DivisibleBy3(t *testing.T) {
 		}
 	}
 
-	F2 := func(event Event) (State, error) {
+	F2 := func(event Event[int]) (State, error) {
 		switch event {
 		case '1', '4', '7':
 			return q0, nil
@@ -55,20 +56,20 @@ func TestFSM_DivisibleBy3(t *testing.T) {
 		}
 	}
 
-	fsm.TransitionMap = map[State]Transition{
+	fsm.TransitionMap = map[State]Transition[int]{
 		q0: F0,
 		q1: F1,
 		q2: F2,
 	}
 	fsm.InitialState = q0
 
-	inch := make(chan Event)
+	inch := make(chan Event[int])
 	ouch := fsm.Run(inch)
 	var state State
-	for _, r := range "112" {
-		inch <- Event(r)
-		state = <- ouch
+	for _, r := range "11" {
+		inch <- Event[int](r)
+		state = <-ouch
 	}
 	log.Printf("Final state=%d\n", state)
-	
+
 }
