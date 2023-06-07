@@ -1,6 +1,9 @@
 package fsm
 
-import "errors"
+import (
+	"errors"
+	"log"
+)
 
 // ---------------------------------------------------------------------
 // Type definitions
@@ -19,9 +22,15 @@ type FSM struct {
 	// The initial state
 	InitialState State
 
+	// CurrentState state
+	CurrentState State
+
 	// The function that maps a tuple of state and event to
 	// the transition that happens.
 	TransitionMap map[State]Transition
+
+	// Set on the Trace flag to trace each transition
+	Trace bool
 }
 
 
@@ -30,7 +39,6 @@ type FSM struct {
 // ---------------------------------------------------------------------
 const (
 	UNKNOWN     State = -1
-	ERROR_STATE State = -2
 )
 
 var (
@@ -56,37 +64,48 @@ func NewFSM() *FSM {
 // Methods
 // ---------------------------------------------------------------------
 
-// Run runs the finite state machine using the channel of events sent to
-// it. It returns the final state and any error.
-func (fsm *FSM) Run(ch <-chan Event) (State, error) {
+// Run runs the finite state machine, sending the state back by a channel
+func (fsm *FSM) Run(inch chan Event) chan State{
 
 	// Check for valid structure
 	if fsm.InitialState == UNKNOWN {
-		return ERROR_STATE, ERR_NO_INITIAL_STATE
+		log.Fatal(ERR_NO_INITIAL_STATE)
 	}
 	if len(fsm.States) == 0 {
-		return ERROR_STATE, ERR_NO_STATES
+		log.Fatal(ERR_NO_STATES)
 	}
 	if len(fsm.TransitionMap) == 0 {
-		return ERROR_STATE, ERR_NO_TRANSITIONS
+		log.Fatal(ERR_NO_TRANSITIONS)
 	}
 
 	// Start running
-	state := fsm.InitialState
-	go func() (State, error) {
+	fsm.CurrentState = fsm.InitialState
+	ouch := make(chan State)
+	go func() {
+		var err error
+		var inState, outState State
+		defer close(ouch)
 		for {
-			event, OK := <-ch
-			if !OK {
-				return state, nil
-			}
-			transition := fsm.TransitionMap[state]
-			state, err := transition(event)
+			inState = fsm.CurrentState
+			event := <- inch
+			transition := fsm.TransitionMap[fsm.CurrentState]
+			fsm.CurrentState, err = transition(event)
+			outState = fsm.CurrentState
 			if err != nil {
-				return state, err
+				log.Fatal(err)
 			}
+			if fsm.Trace {
+				log.Printf("TRACE: input state=%v, event=%v, output state=%v\n", inState, event, outState)
+			}
+			ouch <- fsm.CurrentState
 		}
 	}()
 
 	// Return the final state
-	return state, nil
+	return ouch
+}
+
+// SetTrace turns the trace flag on or off.
+func (fsm *FSM) SetTrace(value bool) {
+	fsm.Trace = value
 }
