@@ -57,27 +57,25 @@ func NewFSM[T any]() *FSM[T] {
 
 // Run runs the finite state machine using the channel of events sent to
 // it
-func (fsm *FSM[T]) Run() (chan Event[T], error) {
+func (fsm *FSM[T]) Run(ch <-chan Event[T]) error {
 
 	// Check for valid structure
 	if len(fsm.Events) == 0 {
-		return nil, ERR_NO_EVENTS
+		return ERR_NO_EVENTS
 	}
 	if fsm.InitialState == UNKNOWN {
-		return nil, ERR_NO_INITIAL_STATE
+		return ERR_NO_INITIAL_STATE
 	}
 	if len(fsm.States) == 0 {
-		return nil, ERR_NO_STATES
+		return ERR_NO_STATES
 	}
 	if len(fsm.TransitionMap) == 0 {
-		return nil, ERR_NO_TRANSITIONS
+		return ERR_NO_TRANSITIONS
 	}
 
 	// Start running
 	state := fsm.InitialState
-	ch := make(chan Event[T])
 	go func() {
-		defer close(ch)
 		for {
 			event := <-ch
 			transition := fsm.TransitionMap[state]
@@ -88,7 +86,7 @@ func (fsm *FSM[T]) Run() (chan Event[T], error) {
 		}
 	}()
 
-	return ch, nil
+	return nil
 }
 
 // ---------------------------------------------------------------------
