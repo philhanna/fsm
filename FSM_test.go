@@ -33,23 +33,23 @@ func TestFSM_DivisibleBy3(t *testing.T) {
 
 	F1 := func(event Event) (State, error) {
 		switch event {
-		case '0', '3', '6', '9':
+		case '1', '4', '7':
 			return q1, nil
 		case '2', '5', '8':
-			return q0, nil
-		default:
 			return q2, nil
+		default:
+			return q0, nil
 		}
 	}
 
 	F2 := func(event Event) (State, error) {
 		switch event {
 		case '1', '4', '7':
-			return q0, nil
-		case '2', '5', '8':
-			return q1, nil
-		default:
 			return q2, nil
+		case '2', '5', '8':
+			return q0, nil
+		default:
+			return q1, nil
 		}
 	}
 
@@ -59,4 +59,5 @@ func TestFSM_DivisibleBy3(t *testing.T) {
 		q2: F2,
 	}
 	fsm.InitialState = q0
+	
 }
