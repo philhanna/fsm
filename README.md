@@ -10,7 +10,7 @@ for an overview.
 - [Github repository](https://github.com/philhanna/fsm)
 - [Wikipedia article on FSM][Finite-state machine]
 
-[Finite-state_machine]:https://en.wikipedia.org/wiki/Finite-state_machine
+[Finite-state machine]:https://en.wikipedia.org/wiki/Finite-state_machine
 
 
 [idGoReportCard]: https://goreportcard.com/report/github.com/philhanna/fsm
