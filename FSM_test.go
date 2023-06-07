@@ -19,23 +19,23 @@ const (
 
 func TestFSM_DivisibleBy3(t *testing.T) {
 
-	tests := []struct{
-		name string
+	tests := []struct {
+		name  string
 		input string
-		want int
+		want  int
 	}{
 		{"243", "243", 0},
 		{"3715", "3715", 1},
 		{"34", "34", 1},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T){
+		t.Run(tt.name, func(t *testing.T) {
 			log.Printf("Starting new test %v\n", tt.name)
 			input := tt.input
 			want := State(tt.want)
 
-			fsm := FSM[int] {
-				States: []State{q0, q1, q2},
+			fsm := FSM[int]{
+				States:       []State{q0, q1, q2},
 				InitialState: q0,
 				TransitionMap: map[State]Transition[int]{
 					q0: F0,
@@ -44,7 +44,7 @@ func TestFSM_DivisibleBy3(t *testing.T) {
 				},
 				Trace: OFF,
 			}
-		
+
 			inch := make(chan Event[int])
 			defer close(inch)
 
