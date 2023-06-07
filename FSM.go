@@ -101,8 +101,6 @@ func (fsm *FSM[T]) Run(inch chan Event[T]) chan State {
 			ouch <- fsm.CurrentState
 		}
 	}()
-
-	// Return the final state
 	return ouch
 }
 

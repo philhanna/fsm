@@ -3,6 +3,8 @@ package fsm
 import (
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // ---------------------------------------------------------------------
@@ -16,27 +18,47 @@ const (
 )
 
 func TestFSM_DivisibleBy3(t *testing.T) {
-	fsm := NewFSM[int]()
-	fsm.SetTrace(true)
-	fsm.States = []State{
-		q0, q1, q2,
-	}
 
-	fsm.TransitionMap = map[State]Transition[int]{
-		q0: F0,
-		q1: F1,
-		q2: F2,
+	tests := []struct{
+		name string
+		input string
+		want int
+	}{
+		{"243", "243", 0},
+		{"3715", "3715", 1},
+		{"34", "34", 1},
 	}
-	fsm.InitialState = q0
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T){
+			log.Printf("Starting new test %v\n", tt.name)
+			input := tt.input
+			want := State(tt.want)
 
-	inch := make(chan Event[int])
-	ouch := fsm.Run(inch)
-	var state State
-	for _, r := range "333" {
-		inch <- Event[int](r)
-		state = <-ouch
+			fsm := FSM[int] {
+				States: []State{q0, q1, q2},
+				InitialState: q0,
+				TransitionMap: map[State]Transition[int]{
+					q0: F0,
+					q1: F1,
+					q2: F2,
+				},
+				Trace: OFF,
+			}
+		
+			inch := make(chan Event[int])
+			defer close(inch)
+
+			ouch := fsm.Run(inch)
+
+			var state State
+			for _, r := range input {
+				inch <- Event[int](r)
+				state = <-ouch
+			}
+
+			assert.Equal(t, want, state)
+		})
 	}
-	log.Printf("Final state=%d\n", state)
 
 }
 
