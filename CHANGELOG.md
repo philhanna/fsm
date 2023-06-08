@@ -5,10 +5,15 @@ The format is based on [Keep a Changelog].
 	
 ## [Unreleased]
 
+## [v2.0.0] - 2023-06-08
+Return value from transition functions is just `State`.
+
 ## [v1.0.0] - 2023-06-07
 First working version, using generic events
 
 [Semantic Versioning]: http://semver.org
 [Keep a Changelog]: http://keepachangelog.com
-[Unreleased]: https://github.com/philhanna/fsm/compare/v1.0.0..HEAD
+
+[Unreleased]: https://github.com/philhanna/fsm/compare/v2.0.0..HEAD
+[v2.0.0]: https://github.com/philhanna/fsm/compare/v1.0.0..v2.0.0
 [v1.0.0]: https://github.com/philhanna/fsm/compare/40772d6..v1.0.0
