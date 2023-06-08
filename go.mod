@@ -1,4 +1,4 @@
-module github.com/philhanna/fsm
+module github.com/philhanna/fsm/v2
 
 go 1.20
 
