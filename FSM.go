@@ -11,7 +11,7 @@ import (
 
 type Event[T any] any
 type State int
-type Transition[T any] func(event Event[T]) (State, error)
+type Transition[T any] func(event Event[T]) State
 
 // FSM is a finite-state machine
 type FSM[T any] struct {
@@ -90,7 +90,7 @@ func (fsm *FSM[T]) Run(inch chan Event[T]) chan State {
 			inState = fsm.CurrentState
 			event := <-inch
 			transition := fsm.TransitionMap[fsm.CurrentState]
-			fsm.CurrentState, err = transition(event)
+			fsm.CurrentState = transition(event)
 			outState = fsm.CurrentState
 			if err != nil {
 				log.Fatal(err)

@@ -15,7 +15,7 @@ The FSM handles generic events; you must specify the type. The example below jus
 uses integers as events.  The transitions between states given a particular event
 you must define as functions taking an event and returning a new state.
 ```go
-func F0(event Event[int]) (State, error) {
+func F0(event Event[int]) State {
 
 	switch event {
 	case '1', '4', '7':
