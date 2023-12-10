@@ -98,6 +98,7 @@ func (fsm *FSM[T]) Run(inch chan Event[T]) (chan State, error) {
 			outState = fsm.CurrentState
 			if err != nil {
 				fsm.Error = err
+				break
 			}
 			if fsm.Trace {
 				log.Printf("TRACE: input state=%v, event=%v, output state=%v\n", inState, event, outState)
