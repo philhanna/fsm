@@ -11,7 +11,7 @@ import (
 
 type Event[T any] any
 type State int
-type Transition[T any] func(event Event[T]) State
+type Transition[T any] func(event Event[T]) (State, error)
 
 // FSM is a finite-state machine
 type FSM[T any] struct {
@@ -31,6 +31,9 @@ type FSM[T any] struct {
 
 	// Set on the Trace flag to trace each transition
 	Trace bool
+
+	// Current error
+	Error error
 }
 
 // ---------------------------------------------------------------------
@@ -38,15 +41,16 @@ type FSM[T any] struct {
 // ---------------------------------------------------------------------
 const (
 	UNKNOWN State = -1
+	ERROR   State = -86
 	ON            = true
 	OFF           = false
 )
 
 var (
-	ERR_NO_EVENTS        = errors.New("No events defined")
-	ERR_NO_INITIAL_STATE = errors.New("No initial state defined")
-	ERR_NO_STATES        = errors.New("No states defined")
-	ERR_NO_TRANSITIONS   = errors.New("No transitions defined")
+	ErrNoEvents       = errors.New("no events defined")
+	ErrNoInitialState = errors.New("no initial state defined")
+	ErrNoStates       = errors.New("no states defined")
+	ErrNoTransitions  = errors.New("no transitions defined")
 )
 
 // ---------------------------------------------------------------------
@@ -66,17 +70,17 @@ func NewFSM[T any]() *FSM[T] {
 // ---------------------------------------------------------------------
 
 // Run runs the finite state machine, sending the state back by a channel
-func (fsm *FSM[T]) Run(inch chan Event[T]) chan State {
+func (fsm *FSM[T]) Run(inch chan Event[T]) (chan State, error) {
 
 	// Check for valid structure
 	if fsm.InitialState == UNKNOWN {
-		log.Fatal(ERR_NO_INITIAL_STATE)
+		return nil, ErrNoInitialState
 	}
 	if len(fsm.States) == 0 {
-		log.Fatal(ERR_NO_STATES)
+		return nil, ErrNoStates
 	}
 	if len(fsm.TransitionMap) == 0 {
-		log.Fatal(ERR_NO_TRANSITIONS)
+		return nil, ErrNoTransitions
 	}
 
 	// Start running
@@ -90,10 +94,10 @@ func (fsm *FSM[T]) Run(inch chan Event[T]) chan State {
 			inState = fsm.CurrentState
 			event := <-inch
 			transition := fsm.TransitionMap[fsm.CurrentState]
-			fsm.CurrentState = transition(event)
+			fsm.CurrentState, err = transition(event)
 			outState = fsm.CurrentState
 			if err != nil {
-				log.Fatal(err)
+				fsm.Error = err
 			}
 			if fsm.Trace {
 				log.Printf("TRACE: input state=%v, event=%v, output state=%v\n", inState, event, outState)
@@ -101,7 +105,7 @@ func (fsm *FSM[T]) Run(inch chan Event[T]) chan State {
 			ouch <- fsm.CurrentState
 		}
 	}()
-	return ouch
+	return ouch, nil
 }
 
 // SetTrace turns the trace flag on or off.
