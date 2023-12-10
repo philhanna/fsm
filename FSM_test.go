@@ -103,6 +103,35 @@ func TestBadTransitionMap(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestCheckError(t *testing.T) {
+	fsm := FSM[int]{
+		States:       []State{q0, q1, q2},
+		InitialState: q0,
+		TransitionMap: map[State]Transition[int]{
+			q0: F0,
+			q1: F1,
+			q2: F2,
+		},
+		Trace: OFF,
+	}
+
+	inch := make(chan Event[int])
+	defer close(inch)
+
+	ouch, err := fsm.Run(inch)
+	assert.Nil(t, err)
+
+	var state State
+	input := "24b"
+	for _, r := range input {
+		inch <- Event[int](r)
+		state = <-ouch
+		if state == ERROR {
+			assert.NotNil(t, fsm.Error)
+		}
+	}
+}
+
 func TestFSM_DivisibleBy3(t *testing.T) {
 
 	tests := []struct {
